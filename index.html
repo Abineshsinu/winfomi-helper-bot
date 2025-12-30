@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Company Chatbot</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; height: 100vh; background: #f0f2f5; }
+        .chat-container { width: 400px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; height: 600px; margin-top: 50px; }
+        .chat-header { background: #007bff; color: white; padding: 15px; text-align: center; font-weight: bold; }
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message { padding: 10px; border-radius: 8px; max-width: 80%; line-height: 1.4; }
+        .user { background: #007bff; color: white; align-self: flex-end; }
+        .bot { background: #e9ecef; color: black; align-self: flex-start; }
+        
+        /* Suggestion Buttons */
+        .suggestions-box { padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .suggestion-btn { background: #fff; border: 1px solid #007bff; color: #007bff; padding: 8px; border-radius: 20px; cursor: pointer; text-align: left; font-size: 0.9em; transition: 0.2s; }
+        .suggestion-btn:hover { background: #007bff; color: white; }
+
+        .input-area { padding: 15px; border-top: 1px solid #ddd; display: flex; gap: 10px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; outline: none; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">Support Agent</div>
+    
+    <div class="chat-messages" id="messages">
+        <div class="message bot">Hello! How can I help you today?</div>
+    </div>
+
+    <div class="suggestions-box" id="suggestions"></div>
+
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Type your question..." onkeypress="handleEnter(event)">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+    // 1. DEFINITELY CLEAN URL (No brackets, no parentheses)
+    const API_URL = "http://127.0.0.1:8000";
+
+    // 2. Load Suggestions
+    // 2. Load Suggestions
+    async function loadSuggestions() {
+        try {
+            const res = await fetch(`${API_URL}/suggestions`);
+            if (!res.ok) throw new Error(`Server returned ${res.status}`);
+            
+            const data = await res.json();
+            const container = document.getElementById('suggestions');
+            container.innerHTML = ""; 
+
+            const items = data.suggestions ? data.suggestions : [];
+            
+            items.forEach(item => {
+                const btn = document.createElement('div');
+                btn.className = 'suggestion-btn';
+                
+                // We show the Question text on the button
+                btn.innerText = item.q; 
+                
+                // --- THE CHANGE IS HERE ---
+                btn.onclick = () => {
+                    // 1. Put the question in the chat
+                    // (We DO NOT show item.a anymore)
+                    
+                    // 2. Trigger the "Send Message" function
+                    // This forces the bot to go to the server, search the database, 
+                    // and generate a fresh answer based on your scraped data.
+                    document.getElementById('userInput').value = item.q;
+                    sendMessage(); 
+                };
+                container.appendChild(btn);
+            });
+        } catch (e) { 
+            console.error("Load Suggestions Error:", e);
+        }
+    }
+
+    // 3. Send Message Logic
+    async function sendMessage() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        addMessage(text, 'user');
+        input.value = '';
+        document.getElementById('suggestions').style.display = 'none';
+
+        const loadingId = addMessage("Thinking...", 'bot');
+
+        try {
+            const response = await fetch(`${API_URL}/chat`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await response.json();
+            document.getElementById(loadingId).innerHTML = data.response;
+        } catch (e) {
+            document.getElementById(loadingId).innerText = "Error: Server is offline.";
+            console.error(e);
+        }
+    }
+
+    function addMessage(text, sender) {
+        const div = document.createElement('div');
+        div.className = `message ${sender}`;
+        div.innerText = text;
+        div.id = Math.random().toString(36).substr(2, 9);
+        const container = document.getElementById('messages');
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+        return div.id;
+    }
+
+    function handleEnter(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+
+    // Start
+    loadSuggestions();
+</script>
+
+</body>
+</html>
