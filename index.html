@@ -39,11 +39,9 @@
 </div>
 
 <script>
-    // 1. DEFINITELY CLEAN URL (No brackets, no parentheses)
     const API_URL = "http://127.0.0.1:8000";
 
-    // 2. Load Suggestions
-    // 2. Load Suggestions
+    // 1. Load Suggestions
     async function loadSuggestions() {
         try {
             const res = await fetch(`${API_URL}/suggestions`);
@@ -62,14 +60,7 @@
                 // We show the Question text on the button
                 btn.innerText = item.q; 
                 
-                // --- THE CHANGE IS HERE ---
                 btn.onclick = () => {
-                    // 1. Put the question in the chat
-                    // (We DO NOT show item.a anymore)
-                    
-                    // 2. Trigger the "Send Message" function
-                    // This forces the bot to go to the server, search the database, 
-                    // and generate a fresh answer based on your scraped data.
                     document.getElementById('userInput').value = item.q;
                     sendMessage(); 
                 };
@@ -80,7 +71,7 @@
         }
     }
 
-    // 3. Send Message Logic
+    // 2. Send Message Logic
     async function sendMessage() {
         const input = document.getElementById('userInput');
         const text = input.value.trim();
@@ -131,7 +122,6 @@
         if (e.key === 'Enter') sendMessage();
     }
 
-    // Start
     loadSuggestions();
 </script>
 
