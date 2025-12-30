@@ -1,3 +1,4 @@
 .env
 venv/
 __pycache__/
+check_url.py
