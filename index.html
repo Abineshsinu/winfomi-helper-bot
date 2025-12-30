@@ -99,7 +99,17 @@
                 body: JSON.stringify({ message: text })
             });
             const data = await response.json();
-            document.getElementById(loadingId).innerHTML = data.response;
+            // Get the raw response
+            let botResponse = data.response;
+
+            // 1. Clean up Bold text: Replace **text** with <b>text</b>
+            botResponse = botResponse.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+
+            // 2. Clean up Lists: Replace * with •
+            botResponse = botResponse.replace(/^\* /gm, '• ');
+
+            // Display the clean HTML
+            document.getElementById(loadingId).innerHTML = botResponse;
         } catch (e) {
             document.getElementById(loadingId).innerText = "Error: Server is offline.";
             console.error(e);
