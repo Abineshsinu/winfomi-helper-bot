@@ -1,7 +1,8 @@
 import os
 from langchain_community.document_loaders import RecursiveUrlLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_pinecone import PineconeVectorStore, PineconeEmbeddings 
+from langchain_pinecone import PineconeVectorStore, PineconeEmbeddings
+from pinecone import Pinecone
 from bs4 import BeautifulSoup as Soup
 from dotenv import load_dotenv
 import re
@@ -34,6 +35,18 @@ def clean_html(content):
 
 # --- 2. INGEST FUNCTION ---
 def ingest_data():
+    # --- STEP 0: CLEANUP (PREVENT DUPLICATES) ---
+    print(f"--- 0. CLEANING UP OLD DATA (Namespace: {NAMESPACE}) ---")
+    try:
+        pc = Pinecone(api_key=PINECONE_API_KEY)
+        index = pc.Index(PINECONE_INDEX_NAME)
+        
+        # Delete everything in this namespace before uploading new stuff
+        index.delete(delete_all=True, namespace=NAMESPACE)
+        print("Old memory wiped. Starting fresh.")
+    except Exception as e:
+        print(f"⚠️ Cleanup Warning (First run?): {e}")
+
     # print("--- 1. CRAWLING {url}---")
     all_docs = []
     for url in START_URLS:
