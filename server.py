@@ -80,15 +80,19 @@ RULES:
    <br>• <b>WhatsApp:</b> +91 93445 01248
    <br>• <b>Email:</b> sales@winfomi.com
 
-4. **HR & CAREERS (SEPARATE):** - **ONLY** show this if the user specifically asks for "HR".
+4. **HR CONTACT:** - **ONLY** show this if the user specifically asks for "HR".
+   - **Do NOT add a header like "HR Contact:".**
+   - Reply with **EXACTLY** this text:
+    "Here are the HR contact details:
    <br>• <b>HR Call/WhatsApp:</b> +91 93445 01248
-   <br>• <b>Email:</b> win@winfomi.com
+   <br>• <b>Email:</b> win@winfomi.com"
 
 5. **JOB SEEKERS (STRICT):** - If the user asks about "Jobs", "Hiring", "Internships", "Vacancies", or "Careers", **do not generate your own sentence.**
    - Reply with **EXACTLY** this text:
      "Please refer to the contact details below for more information:
      <br>• <b>HR Call/WhatsApp:</b> +91 93445 01248
      <br>• <b>Email:</b> win@winfomi.com
+     or you can view current openings here:
      <br>👉 <a href='https://www.winfomi.com/careers' target='_blank'>View Openings</a>"  
 
 6. **ADDRESS (INDIA ONLY):** - If asked for address/location, **IGNORE** US addresses in the context.
@@ -108,6 +112,11 @@ RULES:
      "Our pricing is customized based on your specific project scope and requirements. Please schedule a quick discovery call for an accurate quote."
    - Then add the booking link:
      <br><br>📅 <a href="https://www.winfomi.com/contact" target="_blank" style="color: #007bff; font-weight: bold; text-decoration: none;">Book a Free Consultation</a>
+
+10. **BREVITY (CRITICAL):**
+   - **Keep answers SHORT.** (Max 2-3 sentences).
+   - **NO FLUFF:** Never say "That is a great question" or "Here is the information."
+   - **Start directly with the answer.**
 
 Context: {context}
 
@@ -134,16 +143,28 @@ class ChatRequest(BaseModel):
 
 @app.get("/suggestions")
 def get_suggestions():
-    """Reads the local JSON file to provide instant starter questions"""
-    if os.path.exists(SUGGESTIONS_FILE):
+    # 1. Print current location so we know where Python is looking
+    print(f"DEBUG: Current working directory is: {os.getcwd()}")
+    
+    # 2. Check if file exists
+    if not os.path.exists(SUGGESTIONS_FILE):
+        print("❌ ERROR: suggestions.json not found in this folder!")
+        return {"questions": ["File Not Found", "Check Server Logs"]}
+
+    try:
+        # 3. Try to read and parse the file
         with open(SUGGESTIONS_FILE, "r") as f:
-            try:
-                data = json.load(f)
-                if isinstance(data, list):
-                    return {"suggestions": data}
-            except Exception as e:
-                print(f"Error reading suggestions: {e}")
-    return {"suggestions": []}
+            data = json.load(f)
+            print("SUCCESS: Loaded suggestions from file.")
+            return data
+            
+    except json.JSONDecodeError as e:
+        print(f"JSON ERROR: Your suggestions.json has a syntax error: {e}")
+        return {"questions": ["JSON Syntax Error", "Check Terminal"]}
+        
+    except Exception as e:
+        print(f"UNKNOWN ERROR: {e}")
+        return {"questions": ["Unknown Error", "Check Terminal"]}
 
 @app.post("/chat")
 def chat_endpoint(request: ChatRequest):

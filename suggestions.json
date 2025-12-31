@@ -1,14 +1,7 @@
-[
-  {
-    "q": "What products do you offer?",
-    "a": "We offer a range of AI solutions including Chatbots, Automation Tools, and Data Analytics platforms."
-  },
-  {
-    "q": "What services do you provide?",
-    "a": "Our services include custom AI development, consulting, and 24/7 system maintenance."
-  },
-  {
-    "q": "How can I contact support?",
-    "a": "You can reach our support team at support@yourcompany.com or call +1-555-0123."
-  }
-]
+{
+    "questions": [
+        "What products do you offer?",
+        "What services do you offer?",
+        "How can I contact sales support?"
+    ]
+}

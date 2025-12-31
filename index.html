@@ -39,37 +39,46 @@
 </div>
 
 <script>
+    // Testing locally 
+    // const API_URL = "http://127.0.0.1:8000";
+
+    // Cloud production
     const API_URL = "https://winfomi-website-helper-bot.onrender.com";
 
     // 1. Load Suggestions
     async function loadSuggestions() {
-        try {
-            const res = await fetch(`${API_URL}/suggestions`);
-            if (!res.ok) throw new Error(`Server returned ${res.status}`);
-            
-            const data = await res.json();
-            const container = document.getElementById('suggestions');
-            container.innerHTML = ""; 
+    try {
+        console.log("Fetching suggestions from:", `${API_URL}/suggestions`);
+        const res = await fetch(`${API_URL}/suggestions`);
+        
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+        
+        const data = await res.json();
+        console.log("Raw Data:", data); 
 
-            const items = data.suggestions ? data.suggestions : [];
+        const container = document.getElementById('suggestions');
+        container.innerHTML = ""; 
+
+        const items = data.questions ? data.questions : (Array.isArray(data) ? data : []);
+
+        if (items.length === 0) console.warn("No suggestions found in data!");
+
+        items.forEach(item => {
+            const btn = document.createElement('div');
+            btn.className = 'suggestion-btn';
             
-            items.forEach(item => {
-                const btn = document.createElement('div');
-                btn.className = 'suggestion-btn';
-                
-                // We show the Question text on the button
-                btn.innerText = item.q; 
-                
-                btn.onclick = () => {
-                    document.getElementById('userInput').value = item.q;
-                    sendMessage(); 
-                };
-                container.appendChild(btn);
-            });
-        } catch (e) { 
-            console.error("Load Suggestions Error:", e);
-        }
+            btn.innerText = item; 
+            
+            btn.onclick = () => {
+                document.getElementById('userInput').value = item;
+                sendMessage(); 
+            };
+            container.appendChild(btn);
+        });
+    } catch (e) { 
+        console.error("Load Suggestions Error:", e);
     }
+}
 
     // 2. Send Message Logic
     async function sendMessage() {
